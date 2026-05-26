@@ -1,13 +1,41 @@
 // ⚡ LLAVE DE PIXABAY INYECTADA DIRECTAMENTE
 const PIXABAY_API_KEY = '56024048-9ab7a0dafe14e06f31baf7acc';
 
-// 🔥 CARGAMOS LOS DATOS LOCALES AL INICIAR
+// 🔥 CARGAMOS LOS DATOS LOCALES AL INICIAR (Inventario e Historial)
 window.inventarioGlobal = JSON.parse(localStorage.getItem('inventarioNeon')) || [];
+window.historialGlobal = JSON.parse(localStorage.getItem('historialNeon')) || [];
 
 function guardarLocal() {
     localStorage.setItem('inventarioNeon', JSON.stringify(window.inventarioGlobal));
 }
 
+// 🔥 FUNCIONES DEL HISTORIAL
+function renderizarHistorial() {
+    const lista = document.getElementById('historial');
+    lista.innerHTML = '';
+    window.historialGlobal.forEach(texto => {
+        const li = document.createElement('li');
+        li.textContent = texto;
+        lista.appendChild(li);
+    });
+}
+
+function registrarHistorial(accion) {
+    const texto = `[${new Date().toLocaleTimeString()}] ${accion}`;
+    
+    // Lo guardamos al inicio de la lista
+    window.historialGlobal.unshift(texto);
+    
+    // Opcional: Mantener solo los últimos 50 movimientos para no saturar la memoria
+    if(window.historialGlobal.length > 50) window.historialGlobal.pop();
+    
+    // Guardar en almacenamiento local
+    localStorage.setItem('historialNeon', JSON.stringify(window.historialGlobal));
+    
+    renderizarHistorial();
+}
+
+// 🔥 AGREGAR PRODUCTO
 async function agregarProducto() {
     const nombre = document.getElementById('nombre').value;
     const categoria = document.getElementById('categoria').value;
@@ -66,13 +94,7 @@ function eliminar(id, nombre) {
     renderizar(window.inventarioGlobal);
 }
 
-function registrarHistorial(accion) {
-    const lista = document.getElementById('historial');
-    const li = document.createElement('li');
-    li.textContent = `[${new Date().toLocaleTimeString()}] ${accion}`;
-    lista.prepend(li);
-}
-
+// 🔥 RENDERIZAR TABLA DE INVENTARIO
 function renderizar(datos) {
     const filtro = document.getElementById('busqueda').value.toLowerCase();
     const tbody = document.querySelector('#tablaInventario tbody');
@@ -103,5 +125,6 @@ function renderizar(datos) {
     }
 }
 
-// Carga inicial al abrir la página
+// 🔥 CARGA INICIAL AL ABRIR LA PÁGINA
 renderizar(window.inventarioGlobal);
+renderizarHistorial();
