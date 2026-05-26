@@ -1,22 +1,12 @@
-// ⚡ SE EXTRAEN LAS LLAVES DESDE CONFIG.JS (Oculto localmente mediante tu .gitignore)
-const firebaseConfig = CONFIG_SECRETA.FIREBASE;
-const PIXABAY_API_KEY = CONFIG_SECRETA.PIXABAY_API_KEY;
+// ⚡ LLAVE DE PIXABAY INYECTADA DIRECTAMENTE
+const PIXABAY_API_KEY = '56024048-9ab7a0dafe14e06f31baf7acc';
 
-// ⚡ INICIALIZAR FIREBASE
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// 🔥 CARGAMOS LOS DATOS LOCALES AL INICIAR
+window.inventarioGlobal = JSON.parse(localStorage.getItem('inventarioNeon')) || [];
 
-window.inventarioGlobal = []; // Variable para guardar los datos en vivo
-
-// 🔥 ESCUCHADOR EN TIEMPO REAL: Cada vez que la nube cambie, la tabla se actualiza sola
-db.collection("inventario").onSnapshot((querySnapshot) => {
-    window.inventarioGlobal = [];
-    querySnapshot.forEach((doc) => {
-        // Guardamos los datos y también el ID único que Firebase le da al documento
-        window.inventarioGlobal.push({ id: doc.id, ...doc.data() });
-    });
-    renderizar(window.inventarioGlobal);
-});
+function guardarLocal() {
+    localStorage.setItem('inventarioNeon', JSON.stringify(window.inventarioGlobal));
+}
 
 async function agregarProducto() {
     const nombre = document.getElementById('nombre').value;
@@ -26,6 +16,7 @@ async function agregarProducto() {
     if(!nombre || !categoria || !cantidad) return alert("⚡ Por favor, completa todos los campos.");
 
     const inputNombre = document.getElementById('nombre');
+    const placeholderOriginal = inputNombre.placeholder;
     inputNombre.placeholder = "Buscando imagen...";
     
     let imgUrl = '';
@@ -43,34 +34,36 @@ async function agregarProducto() {
         imgUrl = 'https://via.placeholder.com/100/1f2937/ec4899?text=Error';
     }
 
-    // 🔥 GUARDAR EN LA NUBE
-    db.collection("inventario").add({
+    // 🔥 GUARDAR CON UN ID ÚNICO Y MARCA DE TIEMPO
+    const nuevoProducto = {
+        id: Date.now().toString(),
         nombre: nombre,
         categoria: categoria,
         cantidad: cantidad,
         imgUrl: imgUrl,
-        fecha: new Date()
-    }).then(() => {
-        registrarHistorial(`🟢 Alta: Se agregó "${nombre}"`);
-        
-        // Limpiar campos
-        document.getElementById('nombre').value = '';
-        document.getElementById('categoria').value = '';
-        document.getElementById('cantidad').value = '';
-        inputNombre.placeholder = "Nombre del artículo (ej. Laptop)";
-    }).catch((error) => {
-        alert("Error al guardar en la nube: Verifica que tu base de datos esté en modo de prueba.");
-        console.error(error);
-    });
+        fecha: new Date().toISOString()
+    };
+
+    window.inventarioGlobal.push(nuevoProducto);
+    guardarLocal();
+    
+    registrarHistorial(`🟢 Alta: Se agregó "${nombre}"`);
+    
+    // Limpiar campos de entrada
+    document.getElementById('nombre').value = '';
+    document.getElementById('categoria').value = '';
+    document.getElementById('cantidad').value = '';
+    inputNombre.placeholder = placeholderOriginal;
+    
+    renderizar(window.inventarioGlobal);
 }
 
-// 🔥 BORRAR DE LA NUBE USANDO SU ID ÚNICO
+// 🔥 BORRAR DEL ALMACENAMIENTO LOCAL
 function eliminar(id, nombre) {
-    db.collection("inventario").doc(id).delete().then(() => {
-        registrarHistorial(`🔴 Baja: Se eliminó "${nombre}"`);
-    }).catch((error) => {
-        alert("Error al eliminar: " + error);
-    });
+    window.inventarioGlobal = window.inventarioGlobal.filter(p => p.id !== id);
+    guardarLocal();
+    registrarHistorial(`🔴 Baja: Se eliminó "${nombre}"`);
+    renderizar(window.inventarioGlobal);
 }
 
 function registrarHistorial(accion) {
@@ -109,3 +102,6 @@ function renderizar(datos) {
         });
     }
 }
+
+// Carga inicial al abrir la página
+renderizar(window.inventarioGlobal);
