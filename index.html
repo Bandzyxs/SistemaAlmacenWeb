@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Almacén</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Almacén</h1>
+        <div class="form-group">
+            <input type="text" id="nombre" placeholder="Nombre del artículo">
+            <input type="text" id="categoria" placeholder="Categoría">
+            <input type="number" id="cantidad" placeholder="Cantidad">
+            <button onclick="agregarProducto()">Agregar Artículo</button>
+        </div>
+        <table id="tablaInventario">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Cantidad</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <h2>Historial de Movimientos</h2>
+        <ul id="historial"></ul>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
